@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="web.info.repository.IctRepository">
+
+        <resultMap id="IctResultMap" type="web.info.domain.IctVO">
+        <id property="ino" column="ino"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="writer" column="writer"/>
+        <result property="regDate" column="regDate"/>
+        <result property="updateDate" column="updateDate"/>
+        <collection property="attachListt" ofType="web.info.domain.IctAttachVO">
+            <id property="uuid" column="uuid"/>
+            <result property="uploadPath" column="uploadPath"/>
+            <result property="fileName" column="fileName"/>
+            <result property="fileType" column="fileType"/>
+        </collection>
+    	</resultMap>
+    
+    <insert id="insert">
+        insert into tbl_ict(ino,title,content,writer)
+        values (seq_ict.nextval,#{title},#{content},#{writer})
+    </insert>
+    <insert id="insertSelectKey" keyColumn="ino" keyProperty="ino" useGeneratedKeys="true">
+  	    insert into tbl_ict(ino,title,content,writer)
+    	values (seq_ict.nextval,#{title},#{content},#{writer})
+    </insert>
+    
+    <select id="read" resultType="web.info.domain.IctVO">
+        select * from tbl_ict where ino = #{ino}
+    </select>
+    
+    <delete id="delete">
+        delete from tbl_ict where ino = #{ino}
+    </delete>
+    
+    <update id="update">
+        update tbl_ict
+        set title = #{title},
+            content = #{content},
+            writer = #{writer},
+            updateDate = sysdate
+        where ino = #{ino}
+    </update>
+    
+     <select id="getList" resultMap="IctResultMap">
+        <![CDATA[ 
+        SELECT * FROM 
+        (SELECT /*+INDEX_DESC(tbl_ict pk_board)*/  
+                ROWNUM as rn, ict.ino, ict.title, ict.content, ict.writer, ict.regDate, ict.updateDate, 
+                ictattach.uuid, ictattach.uploadPath, ictattach.fileName, ictattach.fileType
+         FROM tbl_ict ict
+         LEFT OUTER JOIN tbl_ictattach ictattach ON ict.ino = ictattach.ino 
+         WHERE ROWNUM <= #{maxRow}) 
+         WHERE rn > #{minRow}
+        ]]>
+    </select>
+	
+	<select id="getTotalCount" resultType="int">
+    	select count(ino) from tbl_ict
+	</select>
+</mapper>
